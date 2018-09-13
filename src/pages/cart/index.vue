@@ -1,9 +1,19 @@
 <template>
-  <div>购物车</div>
+    <div>
+      <myheader></myheader>
+    </div>
 </template>
 
 <script>
-export default {}
+// 引入组件
+import myheader from '../../components/header';
+// 注册
+// 使用
+export default {
+  components:{
+    myheader
+  }
+}
 </script>
 
 <style>
