@@ -21,9 +21,22 @@
      -->
     <ul class="cate-box">
       <li class="item" v-for="(item, index) in cateList" :key="item.name">
-        <img class="img" src="http://p6lmyfkof.bkt.clouddn.com/icon_index_nav_2@2x.png" alt="">
+        <img class="img" :src="item.image_src" alt="">
+        <text class="text">{{item.name}}</text>
       </li>
     </ul>
+    <!-- 楼层 -->
+    <div class="section" v-for="(item, index) in floorList" :key="index" >
+      <div class="title">
+        <text class="text" >{{item.floor_title.name}}</text>
+        <img class="image" :src="item.floor_title.image_src" alt="">
+      </div>
+      <div class="content">
+          <a class="nav" href="#" v-for="(it, i) in item.product_list" :key="i">
+            <img class="image" :src="it.image_src" alt="">
+          </a>
+      </div>
+    </div>
 
   </div>
 </template>
@@ -39,7 +52,9 @@ export default {
       // 轮播图数据
       swiperList: [],
       // 分类的数据
-      cateList: []
+      cateList: [],
+      // 楼层数据
+      floorList:[]
     };
   },
   // 生命周期函数
@@ -61,16 +76,16 @@ export default {
       })
       // 分类
       .then(res => {
-        // console.log(res);
+        console.log(res);
         this.cateList = res.data.message;
         // 返回 楼层数据
         return tool.thenAjax({
           url:"api/public/v1/home/floordata"
-          // url:"api/public/v1/categories"
         })
       })
       .then(res=>{
-        console.log(res);
+        // console.log(res);
+        this.floorList = res.data.message;
       })
   }
 };
@@ -117,10 +132,54 @@ swiper {
   .item {
     flex: 1;
     .img {
-      width: 128rpx;
-      height: 140rpx;
+      width: 100rpx;
+      height: 100rpx;
       display: block;
-      margin: 0 auto;
+      margin: 0 auto 20rpx;
+    }
+    .text{
+      display: block;
+      text-align: center;
+      font-size:24rpx;
+    }
+  }
+}
+// 楼层数据
+.section{
+  .title{
+    position: relative;
+    .text{
+      position: absolute;
+      color:#FF7B94;
+      font-weight: 700;
+      font-size:50rpx;
+      left:20rpx;
+      top:10rpx;
+    }
+    .image{
+      height:85rpx ;
+      width:100%;
+    }
+  }
+  .content{
+    padding: 20rpx 16rpx;
+    height: 440rpx;
+    .nav{
+      display: block;
+      float: left;
+      width:33.333%;
+      height: 100%;
+      padding: 5rpx;
+      box-sizing: border-box;
+    }
+    .image{
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+    // 只要不是第一个 nav
+    .nav:not(:first-child){
+      height: 50%;
     }
   }
 }

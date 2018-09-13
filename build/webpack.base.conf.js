@@ -56,7 +56,7 @@ module.exports = {
         loader: "mpvue-loader",
         options: vueLoaderConfig
       },
-      // 增加 less解析的规则
+      // 增加 less解析的规则 不配置也是可以的
       { test: /\.less$/, loader: "style-loader!css-loader!less-loader" },
       {
         test: /\.js$/,
