@@ -33,15 +33,18 @@
       <!-- 列表 -->
       <ul class="items">
         <!-- 循环计算属性 -->
-        <li class="item" v-for="(item, index) in orderArr" :key="index">
-          <div class="left">
-            <img class="image" :src="item.goods_small_logo" alt="">
-          </div>
-          <div class="right">
-            <div class="title">{{item.goods_name}}</div>
-            <div class="price">¥
-              <span class="money">{{item.goods_price}}</span>.00</div>
-          </div>
+        <li class="item" v-for="(item, index) in orderArr" :key="index" @click="toDetail(item.goods_id)">
+          <!-- 使用 跳转的标签 布局会改变 绑定点击事件 -->
+          <!-- <navigator :url="'/pages/detail/main?id='+item.goods_id" open-type="navigate" hover-class="none"> -->
+            <div class="left">
+              <img class="image" :src="item.goods_small_logo" alt="">
+            </div>
+            <div class="right">
+              <div class="title">{{item.goods_name}}</div>
+              <div class="price">¥
+                <span class="money">{{item.goods_price}}</span>.00</div>
+            </div>
+          <!-- </navigator> -->
         </li>
       </ul>
     </div>
@@ -87,6 +90,13 @@ export default {
   },
   // 方法
   methods: {
+    // 去详情页
+    toDetail(id){
+      wx.navigateTo({
+        url: '/pages/detail/main?goods_id='+id
+      });
+      // console.log(id);
+    },
     // 抽取的 查询数据函数
     getData() {
       // 调用接口 获取数据
@@ -212,8 +222,12 @@ export default {
     changeFilter(index) {
       // 排序的依据
       this.filterIndex = index;
-      // 如果是 价格排序
-      this.orderPrice = !this.orderPrice;
+      // 只有在点击 最后一个 才要切换
+      // 没有做任何的判断 只要点击 就回触发 价格的排序改变
+      if (index == 2) {
+        // 如果是 价格排序
+        this.orderPrice = !this.orderPrice;
+      }
     },
     // 搜索
     searchItem(item) {

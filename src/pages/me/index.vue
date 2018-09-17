@@ -3,7 +3,7 @@
     <!-- 顶部盒子 -->
     <div class="header-box">
       <div class="me-header">
-        <!-- 点击图片 登陆 -->
+        <!-- 点击图片 登陆 wx.getUserInfo() -->
         <button class="icon" open-type="getUserInfo" @getuserinfo="userInfo">
           <img :src="icon" alt="">
         </button>
