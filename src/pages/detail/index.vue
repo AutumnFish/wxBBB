@@ -2,11 +2,14 @@
   <div>
     <!-- 顶部轮播图 -->
     <swiper class="swiper" indicator-dots autoplay circular>
-      <block v-for="(item, index) in goodsInfo.pics" :key="item.pics_id">
-        <swiper-item @click="previewImg(index)">
-          <image mode="aspectFill" :src="item.pics_mid"></image>
-        </swiper-item>
-      </block>
+      <!-- block 是什么  当做一个 让我们方便编码的 小组件
+          方便编码
+       -->
+      <!-- <block > -->
+      <swiper-item @click="previewImg(index)" v-for="(item, index) in goodsInfo.pics" :key="item.pics_id">
+        <image mode="aspectFill" :src="item.pics_mid"></image>
+      </swiper-item>
+      <!-- </block> -->
     </swiper>
     <!-- 价格 跟简略介绍 -->
     <div class="goods_info">
@@ -54,7 +57,13 @@
       <div class="tab-content">
         <!-- 详情 -->
         <div class="item" v-show="tabIndex==0">
-          <!-- 使用框架的标签 -->
+          <!-- 使用框架的标签
+              解析 html 为 微信的标签
+              百度找到了 wxParse 整合到 mpvue中 失败
+              搜 mpvue-wxParse 整合成功
+              内部干的事
+                把html的标签转化为 微信对应的标签
+           -->
           <wxParse :content="goodsInfo.goods_introduce" @preview="preview" @navigate="navigate" />
         </div>
         <!-- 产品属性 参数 -->
@@ -117,6 +126,12 @@ export default {
         // console.log(res);
         this.goodsInfo = res.data.message;
       });
+
+    // 读取缓存的地址
+    let addressData =  wx.getStorageSync('address');
+    if(addressData){
+      this.address = addressData.userAddress;
+    }
   },
   // 事件
   methods: {
@@ -124,9 +139,11 @@ export default {
     previewImg(index) {
       // 给的是一个图片地址数组 默认的数据中没有 我们自行准备一个
       let picUrls = [];
+      // 所有预览图的 网络地址
       this.goodsInfo.pics.forEach(v => {
         picUrls.push(v.pics_big_url);
       });
+      // 调用微信的原生api  实现图片预览
       wx.previewImage({
         urls: picUrls, //需要预览的图片链接列表,
         current: picUrls[index] // 默认显示的图片 根据索引获取即可
@@ -138,15 +155,27 @@ export default {
       wx.chooseAddress({
         success: res => {
           // console.log(res.userName);
+          // this.userName = res.userName;
           // console.log(res.postalCode);
           // console.log(res.provinceName);
           // console.log(res.cityName);
           // console.log(res.countyName);
+          this.address =
+            res.provinceName + " " + res.cityName + "" + res.countyName;
           // console.log(res.detailInfo);
           // console.log(res.nationalCode);
           // console.log(res.telNumber);
-          this.address =
-            res.provinceName + " " + res.cityName + " " + res.countyName;
+          // this.userMobile = res.telNumber;
+
+          // 保存用户地址 到缓存中
+          wx.setStorage({
+            key: "address",
+            data: {
+              userName: this.userName,
+              userAddress: this.userAddress,
+              userMobile: this.userMobile
+            }
+          });
         }
       });
     },
@@ -164,24 +193,24 @@ export default {
       console.log(href, e);
     },
     // 加入购物车
-    addCart(){
-      let cartData = wx.getStorageSync('cart');
+    addCart() {
+      let cartData = wx.getStorageSync("cart");
       // console.log(cartData);
       // 操纵数据
-      if(cartData){
+      if (cartData) {
         // console.log('有值');
         // 已经添加了这个商品
-        if(cartData[this.goods_id]){
+        if (cartData[this.goods_id]) {
           // console.log('已经添加');
           // 累加数量
-          cartData[this.goods_id] +=1;
-        }else{
+          cartData[this.goods_id] += 1;
+        } else {
           // console.log('还没添加');
           // 直接赋值为1即可
           cartData[this.goods_id] = 1;
         }
         // 还没添加这个商品
-      }else{
+      } else {
         // console.log('没值');
         // cartData = {
         //   // 默认属性名 无论些什么 都会直接解析为 属性名{ goods_id:}
@@ -190,7 +219,7 @@ export default {
         // }
 
         // 跟上面的逻辑是一样的
-        cartData = {}
+        cartData = {};
         cartData[this.goods_id] = 1;
       }
       // 如果缓存中有购物车数据 修改
@@ -198,13 +227,14 @@ export default {
       /*
         id:数量
         缓存起来
-      */ 
-     // 缓存起来
-     wx.setStorageSync('cart', cartData);
+      */
+
+      // 缓存起来
+      wx.setStorageSync("cart", cartData);
     },
     // 去购物车
-    toCart(){
-      console.log('购物车');
+    toCart() {
+      console.log("购物车");
       // 代码跳转
       // 购物车页面是由tabbar管理维护的
       // 这种页面的跳转方式不是 navigateTo
@@ -213,7 +243,7 @@ export default {
       //   url: '/pages/cart/main'
       // });
       wx.switchTab({
-        url: '/pages/cart/main'
+        url: "/pages/cart/main"
       });
     }
   }
@@ -387,16 +417,16 @@ page {
         flex: 1;
         height: 84rpx;
         border: 1rpx solid #cdcdcd;
-        font-size:22rpx;
+        font-size: 22rpx;
         text-align: center;
         line-height: 84rpx;
-        &:last-child{
+        &:last-child {
           margin-left: -1rpx;
         }
       }
       // not选择器(取反)
       // .row 不是 第一个的话 往上挪1个rpx
-      &:not(:first-child){
+      &:not(:first-child) {
         margin-top: -1rpx;
       }
     }

@@ -4,7 +4,9 @@
     <div class="header-box">
       <div class="me-header">
         <!-- 点击图片 登陆 wx.getUserInfo() -->
-        <button class="icon" open-type="getUserInfo" @getuserinfo="userInfo">
+        <!-- open-type 可以十分便捷的获取用户的非私密信息 -->
+        <!-- <button class="icon" open-type="getUserInfo" @getuserinfo="userInfo"> -->
+        <button class="icon" open-type="getUserInfo" @click="login">
           <img :src="icon" alt="">
         </button>
         <span class="iconfont icon-shezhi"></span>
@@ -78,6 +80,8 @@
 </template>
 
 <script>
+// 导入自己封装的ajax模块
+import tool from "../../utils/index";
 export default {
   data: function() {
     return {
@@ -138,14 +142,14 @@ export default {
       });
     },
     // 拨打电话
-    callKF(){
+    callKF() {
       // 跳转到手机的拨号页面
       // 填入  配置的号码
       // 不要乱打电话哦!!!
-      wx.makePhoneCall({ phoneNumber: '手机号' });
+      wx.makePhoneCall({ phoneNumber: "手机号" });
     },
     // 扫码
-    scanCode(){
+    scanCode() {
       // 调用微信的api即可
       // 可以选择图片扫码
       // 如果二维码没有任何的错误 可以识别其内部保存的信息
@@ -153,11 +157,62 @@ export default {
         绝大多数情况下 二维码中保存的信息 都是 网页地址
         微信小程序 不支持跳转去网址 不希望微信小程序引流
         微信小程序 出发点 就是单纯 用完即走
-      */ 
+      */
+
       wx.scanCode({
         // onlyFromCamera: true, //是否只能从相机扫码，不允许从相册选择图片,
         success: res => {
           console.log(res);
+        }
+      });
+    },
+    // 微信第三方登陆
+    login() {
+      // 定义变量 保存登陆的各种信息
+      let code = "";
+      // userInfo中的私密信息
+      let encryptedData = "";
+      let iv = "";
+      let rawData = "";
+      let signature = "";
+      // 微信登陆
+      wx.login({
+        success: logRes => {
+          //  console.log(logRes);
+          // 保存code 用户的标记
+          code = logRes.code;
+          // 获取用户的更为私密信息
+          wx.getUserInfo({
+            withCredentials: true,
+            // 中文显示
+            // lang: 'zh_CN',
+            success: userRes => {
+              // console.log(userRes);
+              encryptedData = userRes.encryptedData;
+              iv = userRes.iv;
+              rawData = userRes.rawData;
+              signature = userRes.signature;
+
+              // 调用第三方登陆
+              tool
+                .thenAjax({
+                  url: "api/public/v1/users/wxlogin",
+                  method: "post",
+                  data: {
+                    code,
+                    encryptedData,
+                    iv,
+                    rawData,
+                    signature
+                  }
+                })
+                .then(myRes => {
+                  // console.log(myRes);
+                  // 保存 token
+                  wx.setStorageSync("token", myRes.data.message.token);
+                });
+            }
+          });
         }
       });
     }
