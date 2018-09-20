@@ -22,7 +22,7 @@
       </div>
       <!-- 商品列表 -->
       <ul class="items">
-        <li class='item' v-for="(item, index) in cartList" :key="item.goods_id">
+        <li @longpress="delOne(index)" class='item' v-for="(item, index) in cartList" :key="item.goods_id">
           <div class="left">
             <!-- 
               v-model 绑定的是 表单元素的 value属性
@@ -73,7 +73,12 @@
      -->
     <toast message="哥们,别点啦,没有啦" :visible.sync="visible" :img="img"></toast>
     <!-- 没有登陆 提示 -->
-    <toast message="O(∩_∩)O 登录先!" :visible.sync="loginVisible" icon-class="iconfont icon-xiao"></toast>
+    <toast :message="message" :visible.sync="loginVisible" icon-class="iconfont icon-xiao"></toast>
+    <!-- 遮罩层 -->
+    <div class="cover" v-show="cartList.length==0">
+      <span class="iconfont icon-gouwuche"></span>
+      <p class="info">你还没有添加任何商品</p>
+    </div>
   </div>
 </template>
 
@@ -88,6 +93,7 @@ export default {
   // 数据
   data: function() {
     return {
+      // 商品数据
       cartList: [],
       // 用户名
       userName: "",
@@ -102,7 +108,9 @@ export default {
       // 提示图片
       img,
       // 控制登陆弹框是否出现
-      loginVisible: false
+      loginVisible: false,
+      // 提示消息
+      message: "哥们,先登录"
     };
   },
   // 注册自定义组件
@@ -110,7 +118,28 @@ export default {
     toast
   },
   // 加载完毕之后 去获取数据
-  created() {
+  // 如果是 tabbar管理的页面 小程序 一打开 所有被tabbar管理的页面 都会 触发 created事件
+  created() {},
+  // 微信原生的生命周期函数
+  // 只会触发一次
+  onLoad() {
+    console.log("购物车 onload");
+    // 读取数据
+    let addressData = wx.getStorageSync("address");
+    if (addressData) {
+      this.userName = addressData.userName;
+      this.userAddress = addressData.userAddress;
+      this.userMobile = addressData.userMobile;
+    }
+    // 有数据直接赋值
+  },
+  // 每次进入到购物车页面 都回去服务器要数据
+  // 生命周期函数的选择
+  // 如果只要一次 created onLoad中
+  // 如果要多次
+  onShow() {
+    // console.log("购物车show");
+    // console.log("购物车 created");
     // 读取缓存数据
     let cartData = wx.getStorageSync("cart");
     // 拼接为id1,id2
@@ -140,17 +169,6 @@ export default {
         // 修改好了数据
         this.cartList = res.data.message;
       });
-  },
-  // 微信原生的生命周期函数
-  onLoad() {
-    // 读取数据
-    let addressData = wx.getStorageSync("address");
-    if (addressData) {
-      this.userName = addressData.userName;
-      this.userAddress = addressData.userAddress;
-      this.userMobile = addressData.userMobile;
-    }
-    // 有数据直接赋值
   },
   // 方法
   methods: {
@@ -281,6 +299,7 @@ export default {
         });
         // 提交订单即可
         let order_number = "";
+        // 创建支付订单 获取唯一的订单标号(订单的身份证号)
         tool
           .thenAjax({
             url: "api/public/v1/my/orders/create",
@@ -291,13 +310,18 @@ export default {
               goods
             },
             header: {
+              // 登陆状态(令牌)
               Authorization: token
             }
           })
           .then(res => {
             // console.log(res);
+            // 获取 服务器生成的订单号
             order_number = res.data.message.order_number;
             // 订单创建成功之后 就可以发起支付了
+            // 这一步的操作 首先会把数据 发送到 自己的服务器
+            // 自己的服务器 进行 数据的处理 提交到 微信的服务器
+            // 微信的服务器 返回一堆加密的信息 经由我们的服务器 返回到 微信小程序
             return tool.thenAjax({
               url: "api/public/v1/my/orders/req_unifiedorder",
               data: {
@@ -321,14 +345,67 @@ export default {
               signType: res.data.message.wxorder.signType, //签名算法，暂支持 MD5,
               paySign: res.data.message.wxorder.paySign, //签名,具体签名方案参见小程序支付接口文档,
               success: res => {
-                console.log(res);
                 // 根据提示信息 判断是否支付成功
+                // console.log(res);
+                // 完成支付 点击确定之后 就会触发
+                // 支付成功之后
+                // 提示用户支付成功
+                this.message = "支付完成";
+                this.loginVisible = !this.loginVisible;
+                // 删除购物车中 当前这一次 购买的数据
+                // 数组中元素的删除 要从后往前
+                // 因为删除元素之后 索引会变
+                // this.cartList.forEach((v,index)=>{
+                //   if(v.selected==true){
+                //     this.cartList.splice(index,1);
+                //   }
+                // })
+                for (
+                  let index = this.cartList.length - 1;
+                  index >= 0;
+                  index--
+                ) {
+                  if (this.cartList[index].selected == true) {
+                    this.cartList.splice(index, 1);
+                  }
+                }
+                // 缓存中 的购物车数据
+                wx.removeStorageSync("cart");
               },
               fail: () => {},
               complete: () => {}
             });
           });
       }
+    },
+    // 删除某一个
+    delOne(index){
+      // 提示用户
+      wx.showModal({
+        title: '提示', //提示的标题,
+        content: '确认删除', //提示的内容,
+        showCancel: true, //是否显示取消按钮,
+        cancelText: '取消', //取消按钮的文字，默认为取消，最多 4 个字符,
+        cancelColor: '#000000', //取消按钮的文字颜色,
+        confirmText: '确定', //确定按钮的文字，默认为取消，最多 4 个字符,
+        confirmColor: '#3CC51F', //确定按钮的文字颜色,
+        success: res => {
+          if (res.confirm) {
+            console.log('用户点击确定')
+            // 删除 storage中的数据
+            let cartData = wx.getStorageSync('cart');
+            // 删除对象中的属性
+            delete cartData[this.cartList[index].goods_id]
+            // 保存会去
+            wx.setStorageSync('cart', cartData);
+            // 确认时 才删除数据
+            this.cartList.splice(index,1);
+          } else if (res.cancel) {
+            console.log('用户点击取消')
+          }
+        }
+      });
+      // 确认才删除
     }
   },
   // 计算属性
@@ -556,5 +633,24 @@ page {
   // font-size:400rpx !important;
   font-size: 400rpx;
   font-weight: 700;
+}
+// 遮罩层
+.cover{
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: #F5F5F5;
+  text-align: center;
+  .iconfont{
+    font-size:300rpx;
+    font-weight: 700;
+    color:#FF2D4A;
+  }
+  .info{
+    font-size:24rpx;
+    color:gray;
+  }
 }
 </style>

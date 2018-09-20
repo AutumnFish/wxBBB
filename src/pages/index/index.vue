@@ -67,7 +67,7 @@ export default {
     };
   },
   // 生命周期函数
-  onLoad_xxx() {
+  onLoad() {
     console.log('首页的');
     // 获取轮播图数据
     tool
@@ -99,6 +99,10 @@ export default {
       });
   },
   // 页面滚动事件
+  /**
+   * 
+   * 
+  */
   onPageScroll(event) {
     // console.log(event);
     if (event.scrollTop > 192) {

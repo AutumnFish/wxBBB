@@ -39,19 +39,19 @@
       <div class="order">
         <div class="title">我的订单</div>
         <div class="options">
-          <div class="item">
+          <div class="item" @click="toOrder(2)">
             <span class="iconfont icon-daifukuan"></span>
             <p class="opt-name">待付款</p>
           </div>
-          <div class="item">
+          <div class="item" @click="toOrder(3)">
             <span class="iconfont icon-daishouhuo"></span>
             <p class="opt-name">待收货</p>
           </div>
-          <div class="item">
+          <div class="item" @click="toOrder(4)">
             <span class="iconfont icon-tuikuan"></span>
             <p class="opt-name">退款/退货</p>
           </div>
-          <div class="item">
+          <div class="item" @click="toOrder(1)">
             <span class="iconfont icon-dingdan"></span>
             <p class="opt-name">全局订单</p>
           </div>
@@ -187,11 +187,15 @@ export default {
             // 中文显示
             // lang: 'zh_CN',
             success: userRes => {
-              // console.log(userRes);
+              console.log(userRes);
               encryptedData = userRes.encryptedData;
               iv = userRes.iv;
               rawData = userRes.rawData;
               signature = userRes.signature;
+
+              // 保存用户信息
+              this.icon = userRes.userInfo.avatarUrl;
+              this.info = userRes.userInfo.nickName;
 
               // 调用第三方登陆
               tool
@@ -214,6 +218,13 @@ export default {
             }
           });
         }
+      });
+    },
+    // 带着索引值 去订单页
+    toOrder(index){
+      // console.log(index);
+      wx.navigateTo({
+        url: '/pages/order/main?index='+index
       });
     }
   }

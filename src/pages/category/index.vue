@@ -11,11 +11,13 @@
       </scroll-view>
     </div>
     <div class="right">
-      <scroll-view scroll-y scroll-with-animation @scroll="">
+      <!-- 有值 才去继续循环 没有值 就不渲染 -->
+      <scroll-view scroll-y scroll-with-animation @scroll="" v-if="cateList.length!=0">
         <!-- 广告图 -->
         <img class="ad-img" src="/static/images/icon/titleImage.png" alt="">
         <div class="section" v-for="(item, index) in cateList[selectIndex].children" :key="index">
-          <h4 class="title">/ <span class="sub">{{item.cat_name}}</span>  /</h4>
+          <h4 class="title">/
+            <span class="sub">{{item.cat_name}}</span> /</h4>
           <ul class="items">
             <li class="item" v-for="(it, i) in item.children" :key="i">
               <a href="#">
@@ -111,43 +113,43 @@ page > view {
     }
   }
 }
-.right{
-  flex:1;
+.right {
+  flex: 1;
   height: 100%;
   padding: 20rpx 16rpx;
-  scroll-view{
+  scroll-view {
     height: 100%;
-    .ad-img{
+    .ad-img {
       width: 100%;
       height: 180rpx;
       margin: 0 auto;
       display: block;
     }
-    .section{
+    .section {
       text-align: center;
-      .title{
-        font-size:26rpx;
-        padding: 30rpx 0 ;
-        color:#ccc;
-        .sub{
-          color:black;
+      .title {
+        font-size: 26rpx;
+        padding: 30rpx 0;
+        color: #ccc;
+        .sub {
+          color: black;
         }
       }
-      .items{
+      .items {
         display: flex;
-        flex-wrap:wrap;
-        .item{
+        flex-wrap: wrap;
+        .item {
           // flex 1绝对无法换行的 只会均分一行
-          width:33.333%;
-          .pic{
-            width:95rpx;
+          width: 33.333%;
+          .pic {
+            width: 95rpx;
             height: 90rpx;
             display: block;
             margin: 0 auto;
           }
-          .text{
+          .text {
             margin-top: 20rpx;
-            font-size:24rpx;
+            font-size: 24rpx;
           }
         }
       }
